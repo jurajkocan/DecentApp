@@ -23,6 +23,7 @@ interface AccountListGridProps {
 }
 
 interface AccountListGridState {
+    isAccountDetailLoading: boolean;
     hasMoreItems: boolean;
     page: number;
     pageSize: number;
@@ -45,6 +46,7 @@ export class AccountListGridComponent extends React.Component<
     constructor(props: any) {
         super(props);
         this.state = {
+            isAccountDetailLoading: false,
             hasMoreItems: true,
             page: 0,
             pageSize: 10,
@@ -57,6 +59,7 @@ export class AccountListGridComponent extends React.Component<
     }
 
     onItemClick = async (id: string, name: string) => {
+        this.setState({ isAccountDetailLoading: true });
         try {
             const response = await axios.get(`/account/history/${id}`);
             if (response.status === 200) {
@@ -72,8 +75,10 @@ export class AccountListGridComponent extends React.Component<
             } else {
                 message.error("Something is wrong, try again later");
             }
+            this.setState({ isAccountDetailLoading: false });
         } catch (err) {
             message.error("Something is wrong, try again later");
+            this.setState({ isAccountDetailLoading: false });
         }
     };
 
@@ -122,7 +127,7 @@ export class AccountListGridComponent extends React.Component<
                 message.info("No more items");
             }
         } catch (err) {
-            // TODO: add some message aabout error
+            message.error("Something is wrong, try again later");
             gridItems = [];
         }
         this.setState({
@@ -157,12 +162,23 @@ export class AccountListGridComponent extends React.Component<
                     >
                         {this.state.gridItems.map((item, index) => {
                             return (
-                                <div style={{ cursor: "pointer" }}>
+                                <div
+                                    style={{
+                                        cursor: this.state
+                                            .isAccountDetailLoading
+                                            ? "wait"
+                                            : "pointer"
+                                    }}
+                                >
                                     <AccountListGridItemComponent
                                         key={index}
                                         id={item.accountId}
                                         name={item.accountName}
-                                        onClick={this.onItemClick}
+                                        onClick={
+                                            this.state.isAccountDetailLoading
+                                                ? undefined
+                                                : this.onItemClick
+                                        }
                                         isActive={
                                             this.state.activeId ===
                                             item.accountId

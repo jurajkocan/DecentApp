@@ -1,17 +1,40 @@
 import * as WebSocket from "ws";
-import { resolve } from "dns";
-import { promises } from "fs";
 
 export namespace ApiInterfaces {
-    export interface GetAccounts {
+    export interface LookupAccounts {
         id: string;
         result: [string, string][];
     }
 
-    export interface Account {}
+    export interface History {
+        id: string;
+        result: number;
+    }
+
+    export interface RelativeAccountHistory {
+        id: number;
+        result: {
+            id: string;
+            op: [
+                number,
+                {
+                    fee: { amount: number; asset_id: string };
+                    from: string;
+                    to: string;
+                    amount: { amount: number; asset_id: string };
+                    extensions: any[];
+                }
+            ];
+            result: [number, {}];
+            block_num: number;
+            trx_in_block: number;
+            op_in_trx: number;
+            virtual_op: number;
+        }[];
+    }
 }
 
-//ideal scenario would be implement disposable class like in c# and than call it by using statement but i am not going to do that for now
+//ideal scenario would be implement disposable class like in c# and than call it by 'using statement' but i am not going to do that for now
 //using(new class) {
 //    anything
 //}
@@ -23,7 +46,7 @@ export class TestnetApi {
     private _callId: number;
     private _tryCount: number;
     constructor() {
-        this._callId = 0;
+        this._callId = 1;
         this._tryCount = 0;
     }
 
@@ -88,135 +111,141 @@ export class TestnetApi {
         });
     };
 
-    // Public api access
-    public lookupAccounts = async (accountsLimit: number) => {
+    private sendGetRelativeAccountHistory = async (
+        accountId: string,
+        paramId: number,
+        minTransactionId: number,
+        outputLimit: number,
+        maxTransactionId: number
+    ) => {
         try {
-            await this.openConnection();
-            const data = await this.sendData(
-                JSON.stringify({
-                    id: this._callId,
-                    method: "call",
-                    params: [0, "lookup_accounts", ["", accountsLimit]]
-                })
-            );
-
-            await this.closeConnection();
-            return JSON.parse(data) as ApiInterfaces.GetAccounts;
+            if (this.isOpen) {
+                return await this.sendData(
+                    JSON.stringify({
+                        id: 1,
+                        method: "call",
+                        params: [
+                            paramId,
+                            "get_relative_account_history",
+                            [
+                                accountId,
+                                minTransactionId,
+                                outputLimit,
+                                maxTransactionId
+                            ]
+                        ]
+                    })
+                );
+            } else {
+                throw "connection is not open";
+            }
         } catch (err) {
             throw err;
         }
     };
-}
 
-export const testnetApi = () => {
-    const test = async (id: number) => {
-        return new Promise((resolve, reject) => {
-            const ws = new WebSocket("wss://stagesocket.decentgo.com:8090/", {
-                rejectUnauthorized: false
-            });
-
-            ws.onopen = () => {
-                if (id === 0) {
-                    ws.send(
-                        JSON.stringify({
-                            id: 1,
-                            method: "call",
-                            params: [1, "login", ["", ""]]
-                        })
-                    );
-                }
-                if (id === 1) {
-                    ws.send(
-                        JSON.stringify({
-                            id: 2,
-                            method: "call",
-                            params: [1, "history", []]
-                        })
-                    );
-                }
-                if (id === 2) {
-                    ws.send(
-                        JSON.stringify({
-                            id: 3,
-                            method: "call",
-                            params: [
-                                2,
-                                "get_relative_account_history",
-                                ["1.2.128", 1, 1, 8000]
-                            ]
-                        })
-                    );
-                }
-            };
-
-            ws.onmessage = data => {
-                resolve(data);
-                ws.close();
-            };
-
-            ws.onerror = err => {
-                console.log("err:", err);
-            };
-        });
-    };
-
-    const openConnectionAndSendData = async (data: string) => {
-        return new Promise((resolve, reject) => {
-            const ws = new WebSocket("wss://stagesocket.decentgo.com:8090/", {
-                rejectUnauthorized: false
-            });
-
-            ws.onopen = () => {
-                ws.send(data);
-            };
-
-            ws.onmessage = data => {
-                resolve(data.data);
-            };
-
-            ws.onerror = err => {
-                reject(err);
-            };
-        });
-    };
-    return {
-        getAccounts: async (
-            id: number,
-            accountsLimit: number
-        ): Promise<ApiInterfaces.GetAccounts> => {
-            try {
-                return JSON.parse((await openConnectionAndSendData(
+    private sendLookupAccounts = async (
+        accountsLimit: number,
+        paramId?: number
+    ) => {
+        paramId = paramId ? paramId : 0;
+        try {
+            if (this.isOpen) {
+                return await this.sendData(
                     JSON.stringify({
-                        id: id,
+                        id: this._callId,
                         method: "call",
-                        params: [0, "lookup_accounts", ["", accountsLimit]]
+                        params: [
+                            paramId,
+                            "lookup_accounts",
+                            ["", accountsLimit]
+                        ]
                     })
-                )) as string) as ApiInterfaces.GetAccounts;
-            } catch (err) {
-                throw err;
+                );
+            } else {
+                throw "connection is not open";
             }
-        },
-
-        getAccountHistory: async (accountId: string) => {
-            try {
-                console.log("test0: ", await test(0));
-                console.log("test1: ", await test(1));
-                console.log("test2: ", await test(2));
-                return await test(2);
-                // return await openConnectionAndSendData(
-                //     JSON.stringify({
-                //         id: 3,
-                //         method: "call",
-                //         params: [
-                //             2,
-                //             "get_relative_account_history",
-                //             ["1.2.69", 1, 1, 8000]
-                //         ]
-                //     })
-                // );
-            } catch (err) {
-                throw err;
-            }
+        } catch (err) {
+            throw err;
         }
     };
-};
+
+    private sendHistory = async (paramId?: number) => {
+        paramId = paramId ? paramId : 1;
+        try {
+            if (this.isOpen) {
+                return await this.sendData(
+                    JSON.stringify({
+                        id: this._callId,
+                        method: "call",
+                        params: [paramId, "history", []]
+                    })
+                );
+            } else {
+                throw "connection is not open";
+            }
+        } catch (err) {
+            throw err;
+        }
+    };
+
+    private sendLogin = async (paramId?: number) => {
+        paramId = paramId ? paramId : 1;
+        try {
+            if (this.isOpen) {
+                return await this.sendData(
+                    JSON.stringify({
+                        id: this._callId,
+                        method: "call",
+                        params: [paramId, "login", ["", ""]]
+                    })
+                );
+            } else {
+                throw "connection is not open";
+            }
+        } catch (err) {
+            throw err;
+        }
+    };
+
+    // Public api access
+    public lookupAccounts = async (accountsLimit: number) => {
+        try {
+            await this.openConnection();
+            const data = await this.sendLookupAccounts(accountsLimit);
+            await this.closeConnection();
+            return JSON.parse(data) as ApiInterfaces.LookupAccounts;
+        } catch (err) {
+            throw err;
+        }
+    };
+
+    public getRelativeAccountHistory = async (
+        accountId: string,
+        minTransactionId?: number,
+        outputLimit?: number,
+        maxTransactionId?: number
+    ) => {
+        minTransactionId = minTransactionId ? minTransactionId : 1;
+        outputLimit = outputLimit ? outputLimit : 1;
+        maxTransactionId = maxTransactionId ? maxTransactionId : 8000;
+
+        await this.openConnection();
+        const login = await this.sendLogin(1);
+
+        let paramId: number;
+        const databaseApi = await this.sendHistory(1);
+        paramId = (JSON.parse(databaseApi) as ApiInterfaces.History).result;
+
+        const data = await this.sendGetRelativeAccountHistory(
+            accountId,
+            paramId,
+            minTransactionId,
+            outputLimit,
+            maxTransactionId
+        );
+        await this.closeConnection();
+
+        return JSON.parse(data) as ApiInterfaces.RelativeAccountHistory;
+    };
+}

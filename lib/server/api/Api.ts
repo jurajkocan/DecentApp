@@ -2,8 +2,7 @@ import { Express } from "express";
 import {
     getAccountHistory,
     getFilteredAccounts
-} from "../account/AccountController";
-import { testnetApi } from "../testnet/TestnetApi";
+} from "../account/AccountApiController";
 
 export const apiRoutes = async (app: Express) => {
     app.get("/account", async (req, res) => {
@@ -19,18 +18,25 @@ export const apiRoutes = async (app: Express) => {
         }
         const searchText = req.query.search_text;
 
-        const accounts = await getFilteredAccounts(
-            Number(page),
-            Number(pageSize),
-            searchText
-        );
-        res.send(accounts);
+        try {
+            const accounts = await getFilteredAccounts(
+                Number(page),
+                Number(pageSize),
+                searchText
+            );
+            res.send(accounts);
+        } catch (err) {
+            res.status(500).send(err);
+        }
     });
 
     app.get("/account/history/:id", async (req, res) => {
-        console.log("here");
-        const account = await getAccountHistory(req.params.id);
-        console.log(account);
-        res.send(account);
+        try {
+            const account = await getAccountHistory(req.params.id);
+            res.send(account);
+        } catch (err) {
+            console.log(err);
+            res.status(500).send(err);
+        }
     });
 };
