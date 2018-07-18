@@ -1,7 +1,6 @@
 import * as React from "react";
-import {} from "antd";
 import { TransactionHistoryComponent } from "../TransactionHistory/TransactionHistory";
-import { style } from "typestyle";
+import { style } from "typestyle/lib";
 import { UserAccountDetail } from "../../redux/State";
 
 const AccountDetailStyle = {

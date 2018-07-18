@@ -35,7 +35,6 @@ export const apiRoutes = async (app: Express) => {
             const account = await getAccountHistory(req.params.id);
             res.send(account);
         } catch (err) {
-            console.log(err);
             res.status(500).send(err);
         }
     });
