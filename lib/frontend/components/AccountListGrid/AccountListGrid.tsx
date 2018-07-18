@@ -5,8 +5,19 @@ import axios from "axios";
 import { Input } from "antd";
 import { GetUserAccountDetail } from "../../pages/DefaultPageAction";
 import { UserAccountDetail } from "../../redux/State";
+import { style } from "typestyle";
+import { message } from "antd";
+import { LoaderComponent } from "../Loader/Loader";
 
 const Search = Input.Search;
+
+const AccountListGridStyle = {
+    ScrollBarWrapper: style({
+        overflowY: "auto",
+        height: "calc(100% - 36px)"
+    })
+};
+
 interface AccountListGridProps {
     setAccountDetail: typeof GetUserAccountDetail;
 }
@@ -45,18 +56,24 @@ export class AccountListGridComponent extends React.Component<
         };
     }
 
-    onItemClick = async (id: string) => {
+    onItemClick = async (id: string, name: string) => {
         try {
-            const response = await axios.get(`/account/${id}`);
+            const response = await axios.get(`/account/history/${id}`);
             if (response.status === 200) {
-                const accountDetail = response.data as UserAccountDetail;
+                const accountHistory = response.data as UserAccountDetail["transactionHistory"];
+                const accountDetail: UserAccountDetail = {
+                    accountId: id,
+                    accountName: name,
+                    transactionHistory: accountHistory
+                };
+
                 this.props.setAccountDetail(accountDetail);
                 this.setState({ activeId: id });
             } else {
-                console.log("todo: handle error");
+                message.error("Something is wrong, try again later");
             }
         } catch (err) {
-            throw err;
+            message.error("Something is wrong, try again later");
         }
     };
 
@@ -81,12 +98,16 @@ export class AccountListGridComponent extends React.Component<
     ) => {
         try {
             const response = await axios.get(
-                `/account?page=${page}}&page_size=${pageSize}&search_text=${searchText}`
+                `/account?page=${page}&page_size=${pageSize}&search_text=${searchText}`
             );
             if (response.status === 200) return response.data as gridItem[];
-            else throw response.data;
+            else {
+                message.error("Somthing is wrong, try again later");
+                return [];
+            }
         } catch (err) {
-            throw err;
+            message.error("Something is wrong, try again later");
+            return [];
         }
     };
 
@@ -96,7 +117,10 @@ export class AccountListGridComponent extends React.Component<
         const searchText = this.state.searchText;
         let gridItems: gridItem[];
         try {
-            gridItems = await this.getGridItems(page, pageSize, "some text");
+            gridItems = await this.getGridItems(page, pageSize, searchText);
+            if (gridItems.length === 0) {
+                message.info("No more items");
+            }
         } catch (err) {
             // TODO: add some message aabout error
             gridItems = [];
@@ -108,7 +132,7 @@ export class AccountListGridComponent extends React.Component<
             hasMoreItems: gridItems.length === pageSize,
             isNewSearch: false,
             page: page + 1,
-            pageSize: pageSize + pageSize,
+            pageSize: pageSize,
             showLoading: false
         });
     };
@@ -123,16 +147,14 @@ export class AccountListGridComponent extends React.Component<
                         size="large"
                     />
                 </div>
-                <div style={{ overflowY: "auto", height: "calc(100% - 36px" }}>
-                    {this.state.showLoading ? <div>Some loader here</div> : ""}
+                <div className={AccountListGridStyle.ScrollBarWrapper}>
                     <InfiniteScroll
                         pageStart={0}
                         loadMore={this.loadMore}
                         hasMore={this.state.hasMoreItems}
-                        loader={<div> loader here </div>}
+                        loader={<LoaderComponent />}
                         useWindow={false}
                     >
-                        {/* {this.renderRows()} */}
                         {this.state.gridItems.map((item, index) => {
                             return (
                                 <div style={{ cursor: "pointer" }}>

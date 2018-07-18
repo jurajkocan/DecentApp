@@ -1,20 +1,21 @@
 {
-  "compilerOptions": {
-    "strictPropertyInitialization": false,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "target": "es5",
-    "allowJs": false,
-    "jsx": "react",
-    "module": "commonjs",
-    "lib": ["es2015", "dom", "es6"],
-    "allowSyntheticDefaultImports": true,
-    // "declaration": true,
-    "sourceMap": true,
-    "strict": true,
-    "typeRoots": ["./node_modules/@types"]
-  },
-  "exclude": ["webpack", "public"],
-  "typeRoots": ["../node_modules/@types", "../types"],
-  "types": ["typePatches", "types"]
+    "compilerOptions": {
+        "strictPropertyInitialization": false,
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "target": "es5",
+        "allowJs": false,
+        "jsx": "react",
+        "module": "commonjs",
+        "lib": ["es2015", "dom", "es6"],
+        "allowSyntheticDefaultImports": true,
+        // "declaration": true,
+        "sourceMap": true,
+        "strict": true,
+        //"typeRoots": ["./node_modules/@types"],
+        "typeRoots": ["./node_modules/@types", "./types"]
+    },
+    "exclude": ["webpack", "public", "node_modules"],
+    "typeRoots": ["../node_modules/@types", "../types"],
+    "types": ["typePatches", "types"]
 }

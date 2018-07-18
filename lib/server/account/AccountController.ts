@@ -1,40 +1,66 @@
-export const getFilteredAccounts = (
+import { testnetApi } from "../testnet/TestnetApi";
+import Item from "../../../node_modules/antd/lib/list/Item";
+
+export const getFilteredAccounts = async (
     page: number,
     pageSize: number,
     searchText: string
 ) => {
-    const res = [];
-    for (let i = 0; i < pageSize; i++) {
-        res.push(getAccountById(`id: ${i}`));
+    try {
+        const from = page * pageSize;
+        const to = from + pageSize;
+
+        console.log(from, to);
+
+        const allAccounts = await testnetApi().getAccounts(0, 100);
+        const textFiltered = allAccounts.result.filter((item, index) => {
+            const [name, id] = item;
+            if (searchText && searchText !== "") {
+                return (
+                    name.toLowerCase().includes(searchText.toLowerCase()) ||
+                    id.toLowerCase().includes(searchText.toLowerCase())
+                );
+            }
+            return true;
+        });
+        const sliced = textFiltered.slice(from, to);
+        return sliced.map(item => {
+            const [name, id] = item;
+            return {
+                accountId: id,
+                accountName: name
+            };
+        });
+    } catch (err) {
+        console.log(err);
+        //TODO: handle error
     }
-    return res;
 };
 
-export const getAccountById = (accountId: string) => {
-    return {
-        accountId: accountId,
-        accountName: "whatever",
-        transactionHistory: [
-            {
-                from: "1",
-                to: "1",
-                amount: 11
-            },
-            {
-                from: "2",
-                to: "2",
-                amount: 22
-            },
-            {
-                from: "3",
-                to: "3",
-                amount: 33
-            },
-            {
-                from: "4",
-                to: "4",
-                amount: 44
-            }
-        ]
-    };
+export const getAccountHistory = async (accountId: string) => {
+    const a = await testnetApi().getAccountHistory("");
+
+    return;
+    [
+        {
+            from: "1",
+            to: "1",
+            amount: 11
+        },
+        {
+            from: "2",
+            to: "2",
+            amount: 22
+        },
+        {
+            from: "3",
+            to: "3",
+            amount: 33
+        },
+        {
+            from: "4",
+            to: "4",
+            amount: 44
+        }
+    ];
 };

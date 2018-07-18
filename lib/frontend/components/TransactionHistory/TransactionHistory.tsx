@@ -27,7 +27,7 @@ const columns = [
 export const TransactionHistoryComponent = (props: transactionHistoryProps) => {
     return (
         <div>
-            <Table columns={columns} dataSource={props.transactions} />
+            <Table  columns={columns} dataSource={props.transactions} />
         </div>
     );
 };

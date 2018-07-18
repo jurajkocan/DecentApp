@@ -22,12 +22,12 @@ interface AccountListGridProps {
     id: string;
     name: string;
     isActive: boolean;
-    onClick: (id: string) => any;
+    onClick: (id: string, name: string) => any;
 }
 
 export const AccountListGridItemComponent = (props: AccountListGridProps) => {
-    const onClick = () => {
-        props.onClick(props.id);
+    const onClick = () => {        
+        props.onClick(props.id, props.name);
     };
 
     return (

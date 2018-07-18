@@ -4,6 +4,22 @@ import { AppState, UserAccountDetail } from "../redux/State";
 import { GetUserAccountDetail } from "./DefaultPageAction";
 import { AccountListGridComponent } from "../components/AccountListgrid/AccountListGrid";
 import { AccountDetailComponent } from "../components/AccountDetail/AccountDetail";
+import { style } from "typestyle";
+
+const DefaultPageStyle = {
+    Wrapper: style({
+        display: "flex",
+        height: "100vh"
+    }),
+
+    LeftSide: style({
+        width: "30%"
+    }),
+
+    RightSide: style({
+        width: "70%"
+    })
+};
 
 interface OwnProps {}
 
@@ -24,21 +40,13 @@ export class DefaultPage extends React.Component<Props> {
 
     render() {
         return (
-            <div style={{ display: "flex", height: "100vh" }}>
-                <div
-                    style={{
-                        width: "30%"
-                    }}
-                >
+            <div className={DefaultPageStyle.Wrapper}>
+                <div className={DefaultPageStyle.LeftSide}>
                     <AccountListGridComponent
                         setAccountDetail={this.props.setAccountDetail}
                     />
                 </div>
-                <div
-                    style={{
-                        width: "70%"
-                    }}
-                >
+                <div className={DefaultPageStyle.RightSide}>
                     <AccountDetailComponent
                         accountId={this.props.userAccountDetail.accountId}
                         name={this.props.userAccountDetail.accountName}

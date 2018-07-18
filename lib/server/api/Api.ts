@@ -1,8 +1,9 @@
 import { Express } from "express";
 import {
-    getAccountById,
+    getAccountHistory,
     getFilteredAccounts
 } from "../account/AccountController";
+import { testnetApi } from "../testnet/TestnetApi";
 
 export const apiRoutes = async (app: Express) => {
     app.get("/account", async (req, res) => {
@@ -11,23 +12,25 @@ export const apiRoutes = async (app: Express) => {
             res.send("parameter page is required");
             return;
         }
-        const pageSize = req.query.page_size;
+        const pageSize = req.query.page_size as number;
         if (!pageSize) {
             res.send("parameter page_size is required");
             return;
         }
         const searchText = req.query.search_text;
-        if (!searchText) {
-            res.send("parameter search_text is required");
-            return;
-        }
 
-        const accounts = getFilteredAccounts(page, pageSize, searchText);
+        const accounts = await getFilteredAccounts(
+            Number(page),
+            Number(pageSize),
+            searchText
+        );
         res.send(accounts);
     });
 
-    app.get("/account/:id", async (req, res) => {
-        const account = getAccountById(req.params.id);
+    app.get("/account/history/:id", async (req, res) => {
+        console.log("here");
+        const account = await getAccountHistory(req.params.id);
+        console.log(account);
         res.send(account);
     });
 };
