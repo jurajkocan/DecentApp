@@ -1,4 +1,4 @@
-import { testnetApi } from "../testnet/TestnetApi";
+import { testnetApi, TestnetApi } from "../testnet/TestnetApi";
 import Item from "../../../node_modules/antd/lib/list/Item";
 
 export const getFilteredAccounts = async (
@@ -10,9 +10,8 @@ export const getFilteredAccounts = async (
         const from = page * pageSize;
         const to = from + pageSize;
 
-        console.log(from, to);
-
-        const allAccounts = await testnetApi().getAccounts(0, 100);
+        const testnetApi = new TestnetApi();
+        const allAccounts = await testnetApi.lookupAccounts(100);
         const textFiltered = allAccounts.result.filter((item, index) => {
             const [name, id] = item;
             if (searchText && searchText !== "") {
